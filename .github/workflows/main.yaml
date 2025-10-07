@@ -71,7 +71,7 @@ jobs:
      
       - name: Port-forward and test
         run: |
-            kubectl port-forward svc/node-svc 8080:5000 &
+            kubectl port-forward svc/node-svc 9090:5000 &
             sleep 5
             curl http://localhost:8080
 
