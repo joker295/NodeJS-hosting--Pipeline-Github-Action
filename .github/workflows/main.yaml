@@ -73,9 +73,8 @@ jobs:
               
       - name: Test application
         run: |
-              kubectl port-forward -n default svc/node-svc 8080:5000 &
-              sleep 10
-              curl http://localhost:8080 || echo "Connection failed"
+          minikube service list
+          minikube service node-svc --url
               
               
 
