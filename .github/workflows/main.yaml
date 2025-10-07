@@ -51,6 +51,11 @@ jobs:
               kubectl get pods -A
               kubectl get svc -A
 
+      - name: Check if image exists and is public
+        run: |
+              echo "Checking image accessibility..."
+              docker pull ghcr.io/joker295/node-app:latest || echo "Image pull failed - may need authentication"         
+
       - name: Wait for pods to be ready
         run: |
               echo "Waiting for pods to be ready..."
