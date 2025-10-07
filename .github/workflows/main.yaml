@@ -34,7 +34,7 @@ jobs:
 
       
       - name: Setting up Minkiube
-        action: medyagh/setup-minikube@master
+        uses: medyagh/setup-minikube@master
 
       
       - name: Checking if cluster is up or not 
