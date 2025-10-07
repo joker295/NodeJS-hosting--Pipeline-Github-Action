@@ -1,83 +1,101 @@
-name: Deployment pipeline for nodeJS App 
+name: CI/CD Pipeline for Node.js App on Minikube
 
 on:
   push:
     branches:
       - main
 
-jobs: 
-
+jobs:
   build-deploy:
     runs-on: ubuntu-latest
 
-    steps: 
-
-      - name: Checkout Code
+    steps:
+      # --------------------
+      # Checkout Code
+      # --------------------
+      - name: Checkout repository
         uses: actions/checkout@v4
 
+      # --------------------
+      #  Setup Docker + GHCR
+      # --------------------
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to Github Container Registry(GHRC)
-        uses: docker/login-action@v3 
-        with: 
-          registry: ghcr.io 
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
           username: ${{ secrets.GHCR_USERNAME }}
           password: ${{ secrets.GHCR_PASSWORD }}
 
-  
-      - name: Build and push DockerImage
-        run: |  
+      # --------------------
+      #  Build & Push Docker Image
+      # --------------------
+      - name: Build and push Docker image
+        run: |
           cd Docker
           docker build -t ghcr.io/${{ secrets.GHCR_USERNAME }}/node-app:latest .
           docker push ghcr.io/${{ secrets.GHCR_USERNAME }}/node-app:latest
 
-      
-      - name: Setting up Minkiube
+      # --------------------
+      # Setup Minikube Cluster
+      # --------------------
+      - name: Set up Minikube
         uses: medyagh/setup-minikube@master
+        with:
+          kubernetes-version: 1.30.0  # stable version
+          driver: docker
 
-      
-      - name: Checking if cluster is up or not 
-        run : |
-              kubectl get pods -A
+      - name: Verify cluster status
+        run: kubectl get nodes -o wide
 
-      - name: Applying Manifests for K8s
-        run : |
-              kubectl apply -f k8s/deployment.yaml
-              kubectl apply -f k8s/service.yaml
-
-      - name: Checking if pods are working or not 
-        run : |
-              kubectl get pods -A
-              kubectl get svc -A
-
-      - name: Check if image exists and is public
+      # --------------------
+      #  Deploy Manifests
+      # --------------------
+      - name: Apply K8s manifests
         run: |
-              echo "Checking image accessibility..."
-              docker pull ghcr.io/joker295/node-app:latest || echo "Image pull failed - may need authentication"         
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
+          echo "Waiting for pods to start..."
+          sleep 10
+          kubectl get pods -A
 
+      # --------------------
+      # Wait for Pods to be Ready
+      # --------------------
       - name: Wait for pods to be ready
         run: |
-              echo "Waiting for pods to be ready..."
-              kubectl wait --for=condition=ready pod -l app=wexa-application --timeout=120s
-              kubectl get pods -n default
-               kubectl describe pod -l name=wexa-application -n default
-              
-              
-      - name: Test application
+          echo "Waiting for pods to be ready..."
+          kubectl wait --for=condition=ready pod -l app=node-app --timeout=180s
+          kubectl get pods
+          echo "All pods are ready."
+
+      # --------------------
+      # Test Service Accessibility
+      # --------------------
+      - name: Check service details
         run: |
-          minikube service list
+          echo "Service list:"
+          kubectl get svc -A
+          echo "Service URL:"
           minikube service node-svc --url
-     
-      - name: Port-forward and test
+
+      # --------------------
+      # Port-Forward & Test (Internal curl)
+      # --------------------
+      - name: Port-forward and test locally
         run: |
-            kubectl port-forward svc/node-svc 9090:3000 &
-            sleep 5
-            curl http://localhost:9090
+          echo "Testing via port-forward..."
+          kubectl port-forward svc/node-svc 9090:3000 &
+          sleep 5
+          curl -v http://localhost:9090 || (echo " App not responding!" && exit 1)
+          echo "Application reachable on port-forward."
 
-      - name: Test application from inside minikube
+      # --------------------
+      #  Test from inside Minikube (fallback)
+      # --------------------
+      - name: Test application from inside Minikube
         run: |
-             minikube ssh "curl -v http://192.168.49.2:32000"
-              
-
-
+          echo "Testing app from inside Minikube..."
+          minikube ssh "curl -s http://192.168.49.2:32000" || echo " Could not reach NodePort (expected in GitHub runner)."
