@@ -1,15 +1,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: Node-Svc
-
+  name: node-svc
 spec:
-
   type: NodePort
   selector:
-    name: WEXA-APPLICATION
-
+    app: wexa-application
   ports:
     - port: 5000
       targetPort: 3000
-      nodePort:  32000 
+      nodePort: 32000
