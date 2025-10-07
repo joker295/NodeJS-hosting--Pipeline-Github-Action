@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: Node-Svc
+
+spec:
+
+  type: NodePort
+  selector:
+    name: WEXA-APPLICATION
+
+  ports:
+    - port: 5000
+      targetPort: 3000
+      nodePort:  32000 

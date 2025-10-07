@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: Node-Deployment
+
+spec: 
+  replicas: 2
+  selector:
+    matchLabels: 
+      name: WEXA-APPLICATION
+
+  template:
+    metadata:
+      labels: 
+        name: WEXA-APPLICATION
+
+  spec: 
+    containers:
+      - name: Demo-node-app
+        image: ghcr.io/joker295/node-app:latest
+        ports:
+          - containerPort: 3000
+
+    livenessProbe:
+      httpGet: 
+        path: /health
+        port: 5000
+      periodSecond: 10  
+      timeoutSeconds: 10        
+      failureThreshold: 3
+ 
+
+    readinessProbe:
+       httpGet: 
+        path: /ready
+        port: 5000
+       periodSecond: 10  
+       timeoutSeconds: 10        
+       failureThreshold: 3
+
+

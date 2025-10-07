@@ -1,0 +1,56 @@
+name: Deployment pipeline for nodeJS App 
+
+on:
+  push:
+    branches:
+      - main
+
+jobs: 
+
+  build-deploy:
+    runs-on: ubuntu-latest
+
+    steps: 
+
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Github Container Registry(GHRC)
+        uses: docker/login-action@v3 
+        with: 
+          registry: ghcr.io 
+          username: ${{ secrets.GHCR_USERNAME }}
+          password: ${{ secrets.GHCR_PASSWORD }}
+
+  
+      - name: Build and push DockerImage
+        run: |  
+          cd Docker
+          docker build -t ghcr.io/${{ secrets.GHCR_USERNAME }}/node-app:latest .
+          docker push ghcr.io/${{ secrets.GHCR_USERNAME }}/node-app:latest
+
+      
+      - name: Setting up Minkiube
+        action: medyagh/setup-minikube@master
+
+      
+      - name: Checking if cluster is up or not 
+        run : |
+              kubectl get pods -A
+
+      - name: Applying Manifests for K8s
+        run : |
+              kubectl apply -f k8s/deployment.yaml
+              kubectl apply -f k8s/service.yaml
+
+      - name: Checking if pods are working or not 
+        run : |
+              kubectl get pods -A
+              kubectl get svc -A
+              
+              
+
+
