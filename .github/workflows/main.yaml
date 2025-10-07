@@ -59,7 +59,7 @@ jobs:
       - name: Wait for pods to be ready
         run: |
               echo "Waiting for pods to be ready..."
-              kubectl wait --for=condition=ready pod -l app=wexa-application --timeout=300s
+              kubectl wait --for=condition=ready pod -l app=wexa-application --timeout=120s
               kubectl get pods -n default
                kubectl describe pod -l name=wexa-application -n default
               
@@ -68,7 +68,13 @@ jobs:
         run: |
           minikube service list
           minikube service node-svc --url
-              
+     
+      - name: Port-forward and test
+        run: |
+            kubectl port-forward svc/node-svc 8080:5000 &
+            sleep 5
+            curl http://localhost:8080
+
               
 
 
