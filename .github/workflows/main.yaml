@@ -50,11 +50,18 @@ jobs:
         run : |
               kubectl get pods -A
               kubectl get svc -A
-      - name: Checking application traffic
+
+      - name: Wait for pods to be ready
         run: |
-             MINIKUBE_IP=$(minikube ip)
-             echo "Minikube IP: $MINIKUBE_IP"
-             curl http://$MINIKUBE_IP:32000
+              echo "Waiting for pods to be ready..."
+              kubectl wait --for=condition=ready pod -l app=wexa-application --timeout=120s
+              kubectl get pods -n default
+
+      - name: Test application
+        run: |
+              kubectl port-forward -n default svc/node-svc 8080:5000 &
+              sleep 10
+              curl http://localhost:8080 || echo "Connection failed"
               
               
 
