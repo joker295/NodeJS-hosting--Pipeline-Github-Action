@@ -61,11 +61,13 @@ jobs:
               echo "Waiting for pods to be ready..."
               kubectl wait --for=condition=ready pod -l app=wexa-application --timeout=300s
               kubectl get pods -n default
+               kubectl describe pod -l name=wexa-application -n default
               
       - name: Debug why pods aren't ready
         run: |
               echo "=== Pod Status ==="
               kubectl get pods -n default -o wide
+              kubectl describe pod -l name=wexa-application -n default
               echo "=== Pod Events ==="
               kubectl describe pods -l app=wexa-application -n default | grep -A 10 "Events:"
               echo "=== Pod Logs ==="
