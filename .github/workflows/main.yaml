@@ -59,8 +59,9 @@ jobs:
       - name: Wait for pods to be ready
         run: |
               echo "Waiting for pods to be ready..."
-              kubectl wait --for=condition=ready pod -l app=wexa-application --timeout=120s
+              kubectl wait --for=condition=ready pod -l app=wexa-application --timeout=300s
               kubectl get pods -n default
+              
       - name: Debug why pods aren't ready
         run: |
               echo "=== Pod Status ==="
