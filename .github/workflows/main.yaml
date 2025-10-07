@@ -61,7 +61,15 @@ jobs:
               echo "Waiting for pods to be ready..."
               kubectl wait --for=condition=ready pod -l app=wexa-application --timeout=120s
               kubectl get pods -n default
-
+      - name: Debug why pods aren't ready
+        run: |
+              echo "=== Pod Status ==="
+              kubectl get pods -n default -o wide
+              echo "=== Pod Events ==="
+              kubectl describe pods -l app=wexa-application -n default | grep -A 10 "Events:"
+              echo "=== Pod Logs ==="
+              kubectl logs -l app=wexa-application -n default --tail=100 || echo "No logs"
+              
       - name: Test application
         run: |
               kubectl port-forward -n default svc/node-svc 8080:5000 &
