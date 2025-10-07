@@ -7,6 +7,6 @@ spec:
   selector:
     app: wexa-application
   ports:
-    - port: 5000
+    - port: 3000
       targetPort: 3000
       nodePort: 32000
