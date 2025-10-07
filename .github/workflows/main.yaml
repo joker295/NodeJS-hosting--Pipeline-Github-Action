@@ -50,6 +50,11 @@ jobs:
         run : |
               kubectl get pods -A
               kubectl get svc -A
+      - name: Checking application traffic
+        run: |
+             MINIKUBE_IP=$(minikube ip)
+             echo "Minikube IP: $MINIKUBE_IP"
+             curl http://$MINIKUBE_IP:32000
               
               
 
